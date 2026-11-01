@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 from fractions import Fraction
+import os
 from pathlib import Path
 import random
 import re
@@ -111,6 +112,21 @@ def cli_contracts(binary: Path) -> None:
         result = run(binary, "eval", f"1+{control}[31m2")
         if result.returncode != 2 or result.stdout or control in result.stderr or any(ord(character) < 32 and character != "\n" for character in result.stderr):
             raise SystemExit(f"Unsafe control byte in error output: {result}")
+
+    # A read-only descriptor deterministically rejects writes on both Linux
+    # and macOS, including buffered failures that surface only on flush.
+    with open(os.devnull, "rb") as unwritable_output:
+        for arguments in [
+            ("eval", "1+2"), ("explain", "1+2"),
+            ("check", "1", "1"), ("check", "1", "2"),
+            ("--help",), ("-h",), ("--version",),
+        ]:
+            result = subprocess.run(
+                [str(binary), *arguments], stdout=unwritable_output,
+                stderr=subprocess.PIPE, text=True, timeout=5, check=False,
+            )
+            if result.returncode != 2 or result.stderr != "error: could not write command output\n":
+                raise SystemExit(f"Failed-output CLI contract failed for {arguments}: {result}")
 
 
 def main() -> None:

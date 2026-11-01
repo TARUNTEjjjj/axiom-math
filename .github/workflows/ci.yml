@@ -17,14 +17,34 @@ jobs:
             compiler: g++
             type: Release
             sanitizers: OFF
+            shared: OFF
           - os: ubuntu-latest
             compiler: clang++
             type: Debug
             sanitizers: ON
+            shared: OFF
           - os: macos-latest
             compiler: clang++
             type: Release
             sanitizers: OFF
+            shared: OFF
+          - os: ubuntu-latest
+            compiler: g++
+            type: Release
+            sanitizers: OFF
+            shared: ON
+            install_bindir: tools/bin
+            install_libdir: lib64
+            install_includedir: headers
+          - os: macos-latest
+            compiler: clang++
+            type: Release
+            sanitizers: OFF
+            shared: ON
+            install_bindir: tools/bin
+            install_libdir: lib64
+            install_includedir: headers
+    name: ${{ matrix.os }} / ${{ matrix.compiler }} / ${{ matrix.type }} / shared=${{ matrix.shared }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -32,7 +52,16 @@ jobs:
         with:
           python-version: '3.12'
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.type }} -DAXIOM_MATH_SANITIZERS=${{ matrix.sanitizers }} -DAXIOM_MATH_WARNINGS_AS_ERRORS=ON
+        run: >-
+          cmake -S . -B build
+          -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
+          -DCMAKE_BUILD_TYPE=${{ matrix.type }}
+          -DBUILD_SHARED_LIBS=${{ matrix.shared }}
+          -DAXIOM_MATH_SANITIZERS=${{ matrix.sanitizers }}
+          -DAXIOM_MATH_WARNINGS_AS_ERRORS=ON
+          -DCMAKE_INSTALL_BINDIR=${{ matrix.install_bindir || 'bin' }}
+          -DCMAKE_INSTALL_LIBDIR=${{ matrix.install_libdir || 'lib' }}
+          -DCMAKE_INSTALL_INCLUDEDIR=${{ matrix.install_includedir || 'include' }}
       - name: Build
         run: cmake --build build --parallel 2
       - name: Test

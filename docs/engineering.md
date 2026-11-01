@@ -55,7 +55,29 @@ Boundary tests cover both signed integer extremes, negative denominators, zero d
 
 The Python differential suite generates its own expression trees and expected values using `fractions.Fraction`. This supplies a separate implementation and arbitrary-precision oracle for bounded test expressions. CLI checks verify unequal-answer status, diagnostics and source pointers as well as arithmetic output.
 
+A second Python oracle checks 512 full-width cases with independently normalized,
+representable operands. Only the final operation may exceed the public range.
+Expected results use arbitrary-precision fractions, including cases where large
+products cancel, where the reduced numerator or denominator overflows, and where
+the divisor is zero. CLI checks also pass a read-only stdout descriptor to every
+output-producing command to ensure write failures return status 2.
+
 Sanitizer builds use AddressSanitizer and UndefinedBehaviorSanitizer. CI also tests a separate compiler family so compiler-specific behavior is less likely to go unnoticed. Python is a test tool only; the library and CLI have no Python runtime dependency.
+
+## Installation
+
+The shared-library CLI records an install-time runtime search path relative to
+its executable (`@loader_path` on macOS and `$ORIGIN` on Linux). The path is
+computed from the configured binary and library directories. Exported headers
+use `CMAKE_INSTALL_INCLUDEDIR` rather than assuming `include`. Relative install
+directories allow the installed tree to move as a unit; absolute directories
+refer to fixed configured locations.
+
+The installation test moves the installed tree before running its CLI and
+building a separate consumer. Shared-library CI jobs use `tools/bin`, `lib64`,
+and `headers` to exercise custom locations. The isolated test is skipped for
+absolute destinations because `cmake --install --prefix` cannot redirect those
+paths into the test's scratch directory.
 
 ## Current boundaries
 

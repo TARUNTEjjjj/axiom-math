@@ -54,7 +54,7 @@ Result: 2
 
 The explanation traces arithmetic evaluation, including fraction construction. It is not a symbolic proof or an equation-solving tutor. Invalid input produces an error, a byte position and a source pointer on standard error.
 
-Exit codes are `0` for successful evaluation or equality, `1` for a valid unequal comparison, and `2` for invalid syntax, division by zero, overflow or incorrect command usage. Successful output goes to standard output so commands can be used in scripts.
+Exit codes are `0` for successful evaluation or equality, `1` for a valid unequal comparison, and `2` for invalid syntax, division by zero, overflow, incorrect command usage or an output-write failure. Commands flush their output before reporting success, so a failed redirected write is reported as an error. Successful output goes to standard output so commands can be used in scripts.
 
 ## Use the C++ library
 
@@ -78,6 +78,12 @@ cmake --install build --prefix "$PWD/install"
 
 An installed CMake consumer can use `find_package(AxiomMath CONFIG REQUIRED)` and `target_link_libraries(your_target PRIVATE AxiomMath::axiom_math)`. Set `CMAKE_PREFIX_PATH` to the installation prefix. See [examples/basic.cpp](examples/basic.cpp) for a complete executable.
 
+For a shared library, configure with `-DBUILD_SHARED_LIBS=ON`. On Linux and macOS,
+the installed CLI locates its library relative to itself, so an installation with
+relative directories can be moved as a unit. Standard CMake options such as
+`CMAKE_INSTALL_BINDIR`, `CMAKE_INSTALL_LIBDIR` and `CMAKE_INSTALL_INCLUDEDIR` are
+respected; keep their values relative for a relocatable installation.
+
 ## Supported syntax and limits
 
 - Integers and finite decimal literals: `12`, `-3`, `.5`, `5.`, `0.125`.
@@ -94,7 +100,11 @@ Arithmetic is implemented with checked, reduced fractions and private 128-bit in
 
 The C++ suite exercises normalization, full-width integer boundaries, decimal parsing, operator precedence, error positions, input limits and worked steps. It also checks 3,000 deterministic rational pairs against independent small-integer calculations. Assertions remain active in Release builds.
 
-The optional Python suite compares 300 generated expressions against Python's `fractions.Fraction` and checks CLI output and exit codes. Test input is synthetic; the project needs no accounts, personal records, network service or model API.
+The optional Python suites compare 300 generated expressions and 512 cases near
+the full 64-bit boundaries against Python's `fractions.Fraction`. They check exact
+results, cancellation, overflow and division-by-zero rejection, plus CLI output
+and exit codes, including failed writes. Test input is synthetic; the project
+needs no accounts, personal records, network service or model API.
 
 ```sh
 cmake -S . -B build-sanitize -DCMAKE_BUILD_TYPE=Debug \
@@ -103,7 +113,12 @@ cmake --build build-sanitize --parallel
 ctest --test-dir build-sanitize --output-on-failure
 ```
 
-[GitHub Actions](.github/workflows/ci.yml) runs GCC Release and Clang sanitizer builds on Linux, plus an Apple Clang Release build on macOS. Finite tests support the documented behavior; they do not establish correctness for every possible input. See [verification](docs/verification.md) for recorded results.
+[GitHub Actions](.github/workflows/ci.yml) runs GCC Release and Clang sanitizer
+builds on Linux, plus an Apple Clang Release build on macOS. Additional shared
+library builds on Linux and macOS exercise custom installation directories,
+relocation and a separate CMake consumer. Finite tests support the documented
+behavior; they do not establish correctness for every possible input. See
+[verification](docs/verification.md) for recorded results.
 
 ## Project direction
 

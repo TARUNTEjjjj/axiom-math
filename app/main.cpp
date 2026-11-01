@@ -18,7 +18,18 @@ void usage(std::ostream& out) {
         << "  axiom-math --version\n\n"
         << "Quote expressions containing spaces or shell operators.\n"
         << "Supported: integers, finite decimals, + - * /, unary signs, parentheses.\n"
-        << "Exit codes: 0 success/equivalent; 1 not equivalent; 2 invalid input.\n";
+        << "Exit codes: 0 success/equivalent; 1 not equivalent; 2 invalid input or output error.\n";
+}
+
+int finish_output(int status = 0) {
+    // A buffered write can fail only when flushed (for example a full disk or
+    // a read-only stdout descriptor). Do not report a result we could not emit.
+    std::cout.flush();
+    if (!std::cout) {
+        std::cerr << "error: could not write command output\n";
+        return 2;
+    }
+    return status;
 }
 
 // Keep control bytes from an input expression out of terminal output. Byte
@@ -55,11 +66,11 @@ axiom::math::Evaluation run(std::string_view text, bool explain, std::string_vie
 int main(int argc, char* argv[]) {
     if (argc == 2 && std::string_view(argv[1]) == "--version") {
         std::cout << "AxiomMath 0.1.0\n";
-        return 0;
+        return finish_output();
     }
     if (argc == 2 && (std::string_view(argv[1]) == "--help" || std::string_view(argv[1]) == "-h")) {
         usage(std::cout);
-        return 0;
+        return finish_output();
     }
     if (argc < 2) {
         usage(std::cerr);
@@ -77,7 +88,7 @@ int main(int argc, char* argv[]) {
             const auto right = run(argv[3], false, "right expression");
             const bool same = left.value == right.value;
             std::cout << (same ? "equivalent" : "not equivalent") << '\n';
-            return same ? 0 : 1;
+            return finish_output(same ? 0 : 1);
         }
         const auto result = run(argv[2], command == "explain", "expression");
         if (command == "explain") {
@@ -88,7 +99,7 @@ int main(int argc, char* argv[]) {
             std::cout << "Result: ";
         }
         std::cout << result.value.str() << '\n';
-        return 0;
+        return finish_output();
     } catch (const axiom::math::ExpressionError&) {
         return 2; // run() already printed source context.
     } catch (const std::exception& error) {
