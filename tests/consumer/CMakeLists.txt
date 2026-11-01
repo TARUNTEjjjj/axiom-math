@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.20)
+project(AxiomMathConsumer LANGUAGES CXX)
+find_package(AxiomMath CONFIG REQUIRED)
+add_executable(consumer main.cpp)
+target_link_libraries(consumer PRIVATE AxiomMath::axiom_math)
+enable_testing()
+add_test(NAME external-library-use COMMAND consumer)

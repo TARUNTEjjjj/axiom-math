@@ -1,0 +1,98 @@
+#include "axiom/math/expression.hpp"
+
+#include <algorithm>
+#include <exception>
+#include <iostream>
+#include <string>
+#include <string_view>
+
+namespace {
+
+void usage(std::ostream& out) {
+    out << "AxiomMath 0.1.0 — exact arithmetic in C++\n\n"
+        << "Usage:\n"
+        << "  axiom-math eval EXPR          Print a reduced exact result\n"
+        << "  axiom-math check LEFT RIGHT   Check exact arithmetic equivalence\n"
+        << "  axiom-math explain EXPR       Show calculations in evaluation order\n"
+        << "  axiom-math --help\n"
+        << "  axiom-math --version\n\n"
+        << "Quote expressions containing spaces or shell operators.\n"
+        << "Supported: integers, finite decimals, + - * /, unary signs, parentheses.\n"
+        << "Exit codes: 0 success/equivalent; 1 not equivalent; 2 invalid input.\n";
+}
+
+// Keep control bytes from an input expression out of terminal output. Byte
+// offsets remain stable, including for unsupported non-ASCII input.
+std::string printable(std::string_view text) {
+    std::string out;
+    out.reserve(text.size());
+    for (const char character : text) {
+        const auto byte = static_cast<unsigned char>(character);
+        out.push_back(byte >= 32 && byte <= 126 ? static_cast<char>(byte) : ' ');
+    }
+    return out;
+}
+
+axiom::math::Evaluation run(std::string_view text, bool explain, std::string_view label) {
+    try {
+        return axiom::math::evaluate(text, explain);
+    } catch (const axiom::math::ExpressionError& error) {
+        const auto position = std::min(error.position(), text.size());
+        const auto begin = position > 45 ? position - 45 : 0;
+        const auto length = std::min<std::size_t>(text.size() - begin, 90);
+        const std::string prefix = begin == 0 ? "" : "...";
+        std::cerr << "error in " << label << " at byte " << error.position()
+                  << ": " << error.what() << '\n'
+                  << prefix << printable(text.substr(begin, length))
+                  << (begin + length < text.size() ? "..." : "") << '\n'
+                  << std::string(prefix.size() + position - begin, ' ') << "^\n";
+        throw;
+    }
+}
+
+} // namespace
+
+int main(int argc, char* argv[]) {
+    if (argc == 2 && std::string_view(argv[1]) == "--version") {
+        std::cout << "AxiomMath 0.1.0\n";
+        return 0;
+    }
+    if (argc == 2 && (std::string_view(argv[1]) == "--help" || std::string_view(argv[1]) == "-h")) {
+        usage(std::cout);
+        return 0;
+    }
+    if (argc < 2) {
+        usage(std::cerr);
+        return 2;
+    }
+    const std::string_view command(argv[1]);
+    const bool single = command == "eval" || command == "explain";
+    if ((!single && command != "check") || (single && argc != 3) || (command == "check" && argc != 4)) {
+        usage(std::cerr);
+        return 2;
+    }
+    try {
+        if (command == "check") {
+            const auto left = run(argv[2], false, "left expression");
+            const auto right = run(argv[3], false, "right expression");
+            const bool same = left.value == right.value;
+            std::cout << (same ? "equivalent" : "not equivalent") << '\n';
+            return same ? 0 : 1;
+        }
+        const auto result = run(argv[2], command == "explain", "expression");
+        if (command == "explain") {
+            std::size_t index = 1;
+            for (const auto& step : result.steps) {
+                std::cout << index++ << ". " << printable(step.expression) << " = " << step.result.str() << '\n';
+            }
+            std::cout << "Result: ";
+        }
+        std::cout << result.value.str() << '\n';
+        return 0;
+    } catch (const axiom::math::ExpressionError&) {
+        return 2; // run() already printed source context.
+    } catch (const std::exception& error) {
+        std::cerr << "error: " << error.what() << '\n';
+        return 2;
+    }
+}
