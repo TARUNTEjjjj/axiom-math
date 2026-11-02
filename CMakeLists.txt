@@ -23,7 +23,7 @@ function(axiom_configure target)
         target_compile_options(${target} PRIVATE -Werror)
     endif()
     if(AXIOM_MATH_SANITIZERS)
-        target_compile_options(${target} PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
+        target_compile_options(${target} PRIVATE -fsanitize=address,undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer)
         # Static archives need their consumers to link the sanitizer runtime.
         target_link_options(${target} PUBLIC -fsanitize=address,undefined -fno-omit-frame-pointer)
     endif()
