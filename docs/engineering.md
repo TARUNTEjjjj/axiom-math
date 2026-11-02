@@ -60,7 +60,9 @@ representable operands. Only the final operation may exceed the public range.
 Expected results use arbitrary-precision fractions, including cases where large
 products cancel, where the reduced numerator or denominator overflows, and where
 the divisor is zero. CLI checks also pass a read-only stdout descriptor to every
-output-producing command to ensure write failures return status 2.
+output-producing command to ensure write failures return status 2. For a write
+to a closed pipe, the CLI keeps the conventional Unix `SIGPIPE` termination
+instead (status 141 in a shell).
 
 Sanitizer builds use AddressSanitizer and UndefinedBehaviorSanitizer. CI also tests a separate compiler family so compiler-specific behavior is less likely to go unnoticed. Python is a test tool only; the library and CLI have no Python runtime dependency.
 
