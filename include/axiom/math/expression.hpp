@@ -41,7 +41,8 @@ struct Evaluation {
 // are not part of this grammar. All errors carry an input position.
 //
 // If requested, steps contain original source slices for unary/binary operations
-// in evaluation order. A literal alone has no calculation steps.
+// in evaluation order. An unsigned literal alone has no calculation steps;
+// an explicit + or - is a unary operation and contributes a step.
 [[nodiscard]] Evaluation evaluate(std::string_view expression,
                                   bool collect_steps = false);
 
