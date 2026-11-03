@@ -47,7 +47,7 @@ A sign immediately applied to a numeric literal is parsed with that literal, all
 
 Input length, token count and nesting limits bound work and stack depth. Arithmetic errors are reported at the relevant operator or literal. `ExpressionError::position()` points into the original input; the CLI prints a bounded excerpt and replaces control bytes with spaces before writing to the terminal.
 
-When tracing is enabled, unary and binary calculations record their original source slice and exact result in evaluation order. Parentheses determine grouping but do not add artificial computation steps. An expression containing only a literal has no operation steps. These traces explain evaluation, not symbolic algebra.
+When tracing is enabled, unary and binary calculations record their original source slice and exact result in evaluation order. Parentheses determine grouping but do not add artificial computation steps. An unsigned literal alone has no operation steps. An explicit sign is a unary operation, so `-5` records `-5 = -5` and `+5` records `+5 = 5`, including when the parser reads the sign and numeric magnitude together. These traces explain evaluation, not symbolic algebra.
 
 ## Testing strategy
 
