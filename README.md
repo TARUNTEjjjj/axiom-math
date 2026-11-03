@@ -54,7 +54,7 @@ Result: 2
 
 The explanation traces arithmetic evaluation, including fraction construction. It is not a symbolic proof or an equation-solving tutor. Invalid input produces an error, a byte position and a source pointer on standard error.
 
-Exit codes are `0` for successful evaluation or equality, `1` for a valid unequal comparison, and `2` for invalid syntax, division by zero, overflow, incorrect command usage or an output-write failure. Commands flush their output before reporting success, so a failed redirected write is reported as an error. Successful output goes to standard output so commands can be used in scripts.
+Exit codes are `0` for successful evaluation or equality, `1` for a valid unequal comparison, and `2` for invalid syntax, division by zero, overflow, incorrect command usage or an output-write failure. Commands flush their output before reporting success, so a failed redirected write is reported as an error. As is conventional for Unix tools, a write to a closed pipe instead ends the command with `SIGPIPE`, which shells report as status 141. Successful output goes to standard output so commands can be used in scripts.
 
 ## Use the C++ library
 
