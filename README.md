@@ -113,8 +113,9 @@ cmake --build build-sanitize --parallel
 ctest --test-dir build-sanitize --output-on-failure
 ```
 
-[GitHub Actions](.github/workflows/ci.yml) runs GCC Release and Clang sanitizer
-builds on Linux, plus an Apple Clang Release build on macOS. Additional shared
+[GitHub Actions](.github/workflows/ci.yml) runs a GCC build with
+no build type, a GCC Release build and a Clang sanitizer build
+on Linux, plus an Apple Clang Release build on macOS. Additional shared
 library builds on Linux and macOS exercise custom installation directories,
 relocation and a separate CMake consumer. Finite tests support the documented
 behavior; they do not establish correctness for every possible input. See
