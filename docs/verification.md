@@ -49,9 +49,10 @@ cmake --build build-shared --parallel
 ctest --test-dir build-shared --output-on-failure
 ```
 
-The [CI workflow](../.github/workflows/ci.yml) defines five jobs: GCC/Linux Release,
-Clang/Linux sanitizer, Apple Clang/macOS Release, and shared-library Release builds
-on both Linux and macOS. The shared jobs also use custom install directories.
+The [CI workflow](../.github/workflows/ci.yml) defines six jobs: GCC/Linux with no
+build type (keeps the configuration-less installed-consumer test covered), GCC/Linux
+Release, Clang/Linux sanitizer, Apple Clang/macOS Release, and shared-library Release
+builds on both Linux and macOS. The shared jobs also use custom install directories.
 Consult the repository's Actions runs for the result associated with a particular
 commit; the local record above does not claim a Linux run.
 
