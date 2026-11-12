@@ -1,5 +1,12 @@
 # AxiomMath
 
+Exact integer powers are available in the C++ API with `Rational(2, 3).pow(-3)`
+and in the CLI with `axiom-math pow '2/3' -3` (both return `27/8`). Powers use
+exponentiation by squaring, so even full-width integer exponents take at most
+64 iterations. As with other arithmetic, an unrepresentable reduced result is
+reported instead of rounded. `0^0` is defined as `1`; negative powers of zero
+are rejected. The existing expression grammar is unchanged.
+
 [![C++ checks](https://github.com/TARUNTEjjjj/axiom-math/actions/workflows/ci.yml/badge.svg)](https://github.com/TARUNTEjjjj/axiom-math/actions/workflows/ci.yml)
 
 Exact fractions, arithmetic expressions and equivalent-answer checks in C++20. AxiomMath is a small library and command-line tool with no third-party runtime dependencies.

@@ -126,6 +126,26 @@ void integer_boundaries() {
     requires_throw<std::overflow_error>([=] { (void)(Rational(1, maximum) * Rational(1, maximum)); }, "denominator overflow");
 }
 
+void integer_powers() {
+    expect(Rational(2, 3).pow(3), 8, 27);
+    expect(Rational(2, 3).pow(-3), 27, 8);
+    expect(Rational(-2, 3).pow(3), -8, 27);
+    expect(Rational(-2, 3).pow(4), 16, 81);
+    expect(Rational(0).pow(0), 1);
+    expect(Rational(0).pow(7), 0);
+    constexpr auto minimum = std::numeric_limits<std::int64_t>::min();
+    constexpr auto maximum = std::numeric_limits<std::int64_t>::max();
+    expect(Rational(minimum).pow(1), minimum);
+    expect(Rational(maximum).pow(1), maximum);
+    expect(Rational(-1).pow(minimum), 1);
+    expect(Rational(-1).pow(maximum), -1);
+    expect(Rational(1).pow(minimum), 1);
+    expect(Rational(-2).pow(63), minimum);
+    requires_throw<std::domain_error>([] { (void)Rational(0).pow(-1); }, "negative zero power");
+    requires_throw<std::overflow_error>([] { (void)Rational(2).pow(63); }, "positive power overflow");
+    requires_throw<std::overflow_error>([] { (void)Rational(2).pow(-63); }, "negative power denominator overflow");
+}
+
 void decimal_literals() {
     expect(Rational::from_decimal("0"), 0);
     expect(Rational::from_decimal("-0.0"), 0);
@@ -223,6 +243,7 @@ int main() {
     const std::vector<std::pair<std::string, std::function<void()>>> tests = {
         {"canonical normalization", normalization}, {"independent arithmetic oracle", arithmetic},
         {"integer boundaries and overflow", integer_boundaries}, {"exact decimal literals", decimal_literals},
+        {"exact integer powers", integer_powers},
         {"expression precedence and equivalence", expression_values}, {"expression errors and resource limits", expression_failures},
         {"worked calculation steps", explanations},
     };

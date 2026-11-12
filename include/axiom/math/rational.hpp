@@ -28,6 +28,11 @@ public:
 
     [[nodiscard]] Rational operator-() const;
 
+    // Exact integer powers in O(log |exponent|) multiplications. Zero to the
+    // zeroth power is defined as 1; zero to a negative power is a domain error.
+    // An unrepresentable reduced result throws std::overflow_error.
+    [[nodiscard]] Rational pow(std::int64_t exponent) const;
+
     friend bool operator==(const Rational&, const Rational&) noexcept = default;
     friend std::strong_ordering operator<=>(const Rational& left, const Rational& right) noexcept;
     friend Rational operator+(const Rational& left, const Rational& right);
