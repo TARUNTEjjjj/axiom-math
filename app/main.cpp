@@ -1,6 +1,7 @@
 #include "axiom/math/expression.hpp"
 
 #include <algorithm>
+#include <charconv>
 #include <exception>
 #include <iostream>
 #include <string>
@@ -14,6 +15,7 @@ void usage(std::ostream& out) {
         << "  axiom-math eval EXPR          Print a reduced exact result\n"
         << "  axiom-math check LEFT RIGHT   Check exact arithmetic equivalence\n"
         << "  axiom-math explain EXPR       Show calculations in evaluation order\n"
+        << "  axiom-math pow EXPR EXPONENT  Raise an exact result to an integer power\n"
         << "  axiom-math --help\n"
         << "  axiom-math --version\n\n"
         << "Quote expressions containing spaces or shell operators.\n"
@@ -78,11 +80,27 @@ int main(int argc, char* argv[]) {
     }
     const std::string_view command(argv[1]);
     const bool single = command == "eval" || command == "explain";
-    if ((!single && command != "check") || (single && argc != 3) || (command == "check" && argc != 4)) {
+    if ((!single && command != "check" && command != "pow") || (single && argc != 3) ||
+        ((command == "check" || command == "pow") && argc != 4)) {
         usage(std::cerr);
         return 2;
     }
     try {
+        if (command == "pow") {
+            std::string_view text(argv[3]);
+            if (!text.empty() && text.front() == '+') {
+                text.remove_prefix(1);
+                if (!text.empty() && (text.front() == '-' || text.front() == '+'))
+                    throw std::invalid_argument("exponent must be a signed 64-bit integer");
+            }
+            std::int64_t exponent = 0;
+            const auto parsed = std::from_chars(text.data(), text.data() + text.size(), exponent);
+            if (text.empty() || parsed.ec != std::errc{} || parsed.ptr != text.data() + text.size())
+                throw std::invalid_argument("exponent must be a signed 64-bit integer");
+            const auto base = run(argv[2], false, "base expression");
+            std::cout << base.value.pow(exponent).str() << '\n';
+            return finish_output();
+        }
         if (command == "check") {
             const auto left = run(argv[2], false, "left expression");
             const auto right = run(argv[3], false, "right expression");

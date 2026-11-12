@@ -145,6 +145,22 @@ Rational Rational::operator-() const {
     return from_wide(-static_cast<Wide>(numerator_), static_cast<Wide>(denominator_));
 }
 
+Rational Rational::pow(std::int64_t exponent) const {
+    Rational result(1);
+    Rational base = exponent < 0 ? Rational(1) / *this : *this;
+    // Avoid negating INT64_MIN in its signed type.
+    auto remaining = exponent < 0
+        ? static_cast<std::uint64_t>(-(exponent + 1)) + 1
+        : static_cast<std::uint64_t>(exponent);
+    while (remaining != 0) {
+        if ((remaining & 1U) != 0) result = result * base;
+        remaining >>= 1U;
+        // An unused final square could overflow even when the result fits.
+        if (remaining != 0) base = base * base;
+    }
+    return result;
+}
+
 std::strong_ordering operator<=>(const Rational& left, const Rational& right) noexcept {
     const Wide left_scaled = static_cast<Wide>(left.numerator_) * right.denominator_;
     const Wide right_scaled = static_cast<Wide>(right.numerator_) * left.denominator_;
