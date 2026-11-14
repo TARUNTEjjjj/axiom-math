@@ -135,3 +135,7 @@ AxiomMath is a separate C++ project related to the arithmetic needs of [Axiom SA
 Possible next work includes better teaching-oriented explanations, a separately specified answer-checking tolerance policy, and a WebAssembly experiment. These are future ideas. The current release focuses on exact arithmetic, reliable error handling and a reusable API.
 
 Contributions should follow [CONTRIBUTING.md](CONTRIBUTING.md). [MIT license](LICENSE), copyright Tarun Tej.
+
+## GitHub resource collection
+
+Explore the project-specific [resource catalog](resources/README.md): curated references, star-ranked discovery, dated source metadata, cached failure recovery and an optional read-only server API. The repository includes a daily refresh workflow; hosted sites still follow their existing deployment process.
