@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "project": "axiom-math",
+  "title": "AxiomMath references",
+  "minStars": 500,
+  "maxPerCategory": 12,
+  "categories": [
+    {
+      "id": "exact",
+      "title": "Exact and symbolic mathematics",
+      "queries": [
+        "topic:computer-algebra"
+      ],
+      "seeds": [
+        "sympy/sympy",
+        "symengine/symengine",
+        "boostorg/multiprecision"
+      ]
+    },
+    {
+      "id": "algorithms",
+      "title": "Algorithms in C++",
+      "queries": [
+        "topic:algorithms language:C++"
+      ],
+      "seeds": [
+        "TheAlgorithms/C-Plus-Plus",
+        "cp-algorithms/cp-algorithms"
+      ]
+    }
+  ]
+}
