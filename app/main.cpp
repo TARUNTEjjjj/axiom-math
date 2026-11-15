@@ -114,6 +114,12 @@ int main(int argc, char* argv[]) {
             for (const auto& step : result.steps) {
                 std::cout << index++ << ". " << printable(step.expression) << " = " << step.result.str() << '\n';
             }
+            // A long chain repeats its earlier text in every step, so the library
+            // records only the first steps. The result is complete either way.
+            if (result.omitted_steps != 0) {
+                std::cout << "Omitted steps: " << result.omitted_steps << " (the steps of one explanation quote at most "
+                          << axiom::math::max_explanation_length << " bytes)\n";
+            }
             std::cout << "Result: ";
         }
         std::cout << result.value.str() << '\n';

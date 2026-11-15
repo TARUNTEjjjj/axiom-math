@@ -69,13 +69,27 @@ Canonical canonical(Wide numerator, Wide denominator) {
     return {reduced_numerator, static_cast<std::int64_t>(denominator_magnitude)};
 }
 
-Rational from_wide(Wide numerator, Wide denominator) {
-    const Canonical reduced = canonical(numerator, denominator);
-    return Rational(reduced.numerator, reduced.denominator);
-}
-
 bool is_digit(char value) noexcept {
     return value >= '0' && value <= '9';
+}
+
+// An optional sign, then digits with at most one '.', and at least one digit.
+bool well_formed(std::string_view literal) noexcept {
+    if (!literal.empty() && (literal.front() == '+' || literal.front() == '-')) {
+        literal.remove_prefix(1);
+    }
+    bool has_digits = false;
+    bool has_point = false;
+    for (const char character : literal) {
+        if (is_digit(character)) {
+            has_digits = true;
+        } else if (character == '.' && !has_point) {
+            has_point = true;
+        } else {
+            return false;
+        }
+    }
+    return has_digits;
 }
 
 } // namespace
@@ -97,6 +111,11 @@ std::string Rational::str() const {
 Rational Rational::from_decimal(std::string_view literal) {
     if (literal.empty()) {
         throw std::invalid_argument("decimal literal is empty");
+    }
+    // Check the syntax before any limit: malformed text is invalid_argument
+    // however long it is, and only a well-formed literal can exceed a limit.
+    if (!well_formed(literal)) {
+        throw std::invalid_argument("expected an integer or finite decimal literal");
     }
     if (literal.size() > 64) {
         throw std::overflow_error("decimal literal exceeds the 64-character limit");
@@ -132,17 +151,16 @@ Rational Rational::from_decimal(std::string_view literal) {
             ++position;
         }
     }
-    if (integer_digits + fractional_digits == 0 || position != literal.size()) {
-        throw std::invalid_argument("expected an integer or finite decimal literal");
-    }
 
     // At most 37 digits are accumulated, strictly below 10^37 and therefore
     // below the signed 128-bit maximum. Reduce before testing the int64 bounds.
-    return from_wide(negative ? -numerator : numerator, denominator);
+    const Canonical reduced = canonical(negative ? -numerator : numerator, denominator);
+    return {Reduced{}, reduced.numerator, reduced.denominator};
 }
 
 Rational Rational::operator-() const {
-    return from_wide(-static_cast<Wide>(numerator_), static_cast<Wide>(denominator_));
+    const Canonical negated = canonical(-static_cast<Wide>(numerator_), static_cast<Wide>(denominator_));
+    return {Reduced{}, negated.numerator, negated.denominator};
 }
 
 Rational Rational::pow(std::int64_t exponent) const {
@@ -180,7 +198,8 @@ Rational operator+(const Rational& left, const Rational& right) {
     const Wide numerator = static_cast<Wide>(left.numerator_) * right.denominator_ +
                            static_cast<Wide>(right.numerator_) * left.denominator_;
     const Wide denominator = static_cast<Wide>(left.denominator_) * right.denominator_;
-    return from_wide(numerator, denominator);
+    const Canonical sum = canonical(numerator, denominator);
+    return {Rational::Reduced{}, sum.numerator, sum.denominator};
 }
 
 Rational operator-(const Rational& left, const Rational& right) {
@@ -189,17 +208,20 @@ Rational operator-(const Rational& left, const Rational& right) {
     const Wide numerator = static_cast<Wide>(left.numerator_) * right.denominator_ -
                            static_cast<Wide>(right.numerator_) * left.denominator_;
     const Wide denominator = static_cast<Wide>(left.denominator_) * right.denominator_;
-    return from_wide(numerator, denominator);
+    const Canonical difference = canonical(numerator, denominator);
+    return {Rational::Reduced{}, difference.numerator, difference.denominator};
 }
 
 Rational operator*(const Rational& left, const Rational& right) {
-    return from_wide(static_cast<Wide>(left.numerator_) * right.numerator_,
-                     static_cast<Wide>(left.denominator_) * right.denominator_);
+    const Canonical product = canonical(static_cast<Wide>(left.numerator_) * right.numerator_,
+                                        static_cast<Wide>(left.denominator_) * right.denominator_);
+    return {Rational::Reduced{}, product.numerator, product.denominator};
 }
 
 Rational operator/(const Rational& left, const Rational& right) {
-    return from_wide(static_cast<Wide>(left.numerator_) * right.denominator_,
-                     static_cast<Wide>(left.denominator_) * right.numerator_);
+    const Canonical quotient = canonical(static_cast<Wide>(left.numerator_) * right.denominator_,
+                                         static_cast<Wide>(left.denominator_) * right.numerator_);
+    return {Rational::Reduced{}, quotient.numerator, quotient.denominator};
 }
 
 } // namespace axiom::math
