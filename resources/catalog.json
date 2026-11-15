@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "project": "axiom-math",
   "title": "AxiomMath references",
-  "fetchedAt": "2026-11-14T06:28:37.159Z",
-  "attemptedAt": "2026-11-14T06:28:21.469Z",
+  "fetchedAt": "2026-11-15T10:53:21.325Z",
+  "attemptedAt": "2026-11-15T10:53:05.536Z",
   "status": "live",
   "errors": [],
   "excludedSeeds": [],
@@ -41,17 +41,17 @@
         "symbolic-computation",
         "symbolic-manipulation"
       ],
-      "stars": 1008,
+      "stars": 1010,
       "forks": 53,
-      "pushedAt": "2026-11-13T11:34:15.000Z",
+      "pushedAt": "2026-11-14T11:57:15.000Z",
       "license": null,
       "category": "exact",
       "sourceQuery": "topic:computer-algebra",
-      "fetchedAt": "2026-11-14T06:28:21.999Z",
+      "fetchedAt": "2026-11-15T10:53:06.332Z",
       "provenance": "github",
       "stale": false,
       "score": 70,
-      "reason": "Exact and symbolic mathematics resource; 1008 GitHub stars."
+      "reason": "Exact and symbolic mathematics resource; 1010 GitHub stars."
     },
     {
       "id": 123055424,
@@ -82,14 +82,14 @@
       ],
       "stars": 1699,
       "forks": 275,
-      "pushedAt": "2026-11-13T17:15:19.000Z",
+      "pushedAt": "2026-11-14T17:54:36.000Z",
       "license": null,
       "category": "exact",
       "sourceQuery": "topic:computer-algebra",
-      "fetchedAt": "2026-11-14T06:28:21.999Z",
+      "fetchedAt": "2026-11-15T10:53:06.332Z",
       "provenance": "github",
       "stale": false,
-      "score": 56.14,
+      "score": 56.13,
       "reason": "Exact and symbolic mathematics resource; 1699 GitHub stars."
     },
     {
@@ -120,11 +120,11 @@
       ],
       "stars": 833,
       "forks": 79,
-      "pushedAt": "2026-11-14T02:29:24.000Z",
+      "pushedAt": "2026-11-15T01:25:53.000Z",
       "license": "MIT",
       "category": "exact",
       "sourceQuery": "topic:computer-algebra",
-      "fetchedAt": "2026-11-14T06:28:21.999Z",
+      "fetchedAt": "2026-11-15T10:53:06.332Z",
       "provenance": "github",
       "stale": false,
       "score": 54.6,
@@ -145,17 +145,17 @@
         "mathematics",
         "maths"
       ],
-      "stars": 535,
+      "stars": 537,
       "forks": 189,
-      "pushedAt": "2026-11-14T02:16:36.000Z",
+      "pushedAt": "2026-11-15T09:00:06.000Z",
       "license": null,
       "category": "exact",
       "sourceQuery": "topic:computer-algebra",
-      "fetchedAt": "2026-11-14T06:28:21.999Z",
+      "fetchedAt": "2026-11-15T10:53:06.332Z",
       "provenance": "github",
       "stale": false,
-      "score": 53.64,
-      "reason": "Exact and symbolic mathematics resource; 535 GitHub stars."
+      "score": 53.65,
+      "reason": "Exact and symbolic mathematics resource; 537 GitHub stars."
     },
     {
       "id": 263535757,
@@ -176,17 +176,17 @@
         "webgl",
         "webgl2"
       ],
-      "stars": 2390,
+      "stars": 2389,
       "forks": 136,
       "pushedAt": "2024-05-02T16:29:14.000Z",
       "license": "Apache-2.0",
       "category": "exact",
       "sourceQuery": "topic:computer-algebra",
-      "fetchedAt": "2026-11-14T06:28:21.999Z",
+      "fetchedAt": "2026-11-15T10:53:06.332Z",
       "provenance": "github",
       "stale": false,
       "score": 49.72,
-      "reason": "Exact and symbolic mathematics resource; 2390 GitHub stars."
+      "reason": "Exact and symbolic mathematics resource; 2389 GitHub stars."
     },
     {
       "id": 153732715,
@@ -216,7 +216,7 @@
       "license": "Apache-2.0",
       "category": "exact",
       "sourceQuery": "topic:computer-algebra",
-      "fetchedAt": "2026-11-14T06:28:21.999Z",
+      "fetchedAt": "2026-11-15T10:53:06.332Z",
       "provenance": "github",
       "stale": false,
       "score": 47.12,
@@ -233,15 +233,15 @@
         "math"
       ],
       "stars": 1429,
-      "forks": 316,
+      "forks": 315,
       "pushedAt": "2026-11-13T18:15:25.000Z",
       "license": null,
       "category": "exact",
       "sourceQuery": "repo:symengine/symengine",
-      "fetchedAt": "2026-11-14T06:28:26.695Z",
+      "fetchedAt": "2026-11-15T10:53:10.978Z",
       "provenance": "github",
       "stale": false,
-      "score": 40.76,
+      "score": 40.73,
       "reason": "Exact and symbolic mathematics resource; 1429 GitHub stars."
     },
     {
@@ -259,17 +259,17 @@
         "mathematics",
         "representation-theory"
       ],
-      "stars": 1020,
+      "stars": 1021,
       "forks": 191,
-      "pushedAt": "2026-11-13T17:46:32.000Z",
+      "pushedAt": "2026-11-15T10:09:09.000Z",
       "license": "GPL-2.0",
       "category": "exact",
       "sourceQuery": "topic:computer-algebra",
-      "fetchedAt": "2026-11-14T06:28:21.999Z",
+      "fetchedAt": "2026-11-15T10:53:06.332Z",
       "provenance": "github",
       "stale": false,
-      "score": 40.03,
-      "reason": "Exact and symbolic mathematics resource; 1020 GitHub stars."
+      "score": 40.05,
+      "reason": "Exact and symbolic mathematics resource; 1021 GitHub stars."
     },
     {
       "id": 54584318,
@@ -297,10 +297,10 @@
       "license": "MIT",
       "category": "exact",
       "sourceQuery": "topic:computer-algebra",
-      "fetchedAt": "2026-11-14T06:28:21.999Z",
+      "fetchedAt": "2026-11-15T10:53:06.332Z",
       "provenance": "github",
       "stale": false,
-      "score": 36.64,
+      "score": 36.63,
       "reason": "Exact and symbolic mathematics resource; 1005 GitHub stars."
     },
     {
@@ -315,17 +315,17 @@
         "python",
         "science"
       ],
-      "stars": 15087,
-      "forks": 5690,
-      "pushedAt": "2026-11-14T03:01:48.000Z",
+      "stars": 15090,
+      "forks": 5695,
+      "pushedAt": "2026-11-15T06:53:59.000Z",
       "license": null,
       "category": "exact",
       "sourceQuery": "repo:sympy/sympy",
-      "fetchedAt": "2026-11-14T06:28:24.345Z",
+      "fetchedAt": "2026-11-15T10:53:08.655Z",
       "provenance": "github",
       "stale": false,
       "score": 30.89,
-      "reason": "Exact and symbolic mathematics resource; 15087 GitHub stars."
+      "reason": "Exact and symbolic mathematics resource; 15090 GitHub stars."
     },
     {
       "id": 3086366,
@@ -342,14 +342,14 @@
       ],
       "stars": 678,
       "forks": 305,
-      "pushedAt": "2026-11-10T22:33:19.000Z",
+      "pushedAt": "2026-11-14T08:50:12.000Z",
       "license": "LGPL-3.0",
       "category": "exact",
       "sourceQuery": "topic:computer-algebra",
-      "fetchedAt": "2026-11-14T06:28:21.999Z",
+      "fetchedAt": "2026-11-15T10:53:06.332Z",
       "provenance": "github",
       "stale": false,
-      "score": 24.07,
+      "score": 24.13,
       "reason": "Exact and symbolic mathematics resource; 678 GitHub stars."
     },
     {
@@ -380,14 +380,14 @@
       ],
       "stars": 519,
       "forks": 41,
-      "pushedAt": "2026-10-19T23:19:13.000Z",
+      "pushedAt": "2026-11-14T18:15:24.000Z",
       "license": "AGPL-3.0",
       "category": "exact",
       "sourceQuery": "topic:computer-algebra",
-      "fetchedAt": "2026-11-14T06:28:21.999Z",
+      "fetchedAt": "2026-11-15T10:53:06.332Z",
       "provenance": "github",
       "stale": false,
-      "score": 22.93,
+      "score": 23.56,
       "reason": "Exact and symbolic mathematics resource; 519 GitHub stars."
     },
     {
@@ -414,15 +414,15 @@
         "sort"
       ],
       "stars": 34886,
-      "forks": 7898,
+      "forks": 7901,
       "pushedAt": "2026-10-03T10:34:43.000Z",
       "license": "MIT",
       "category": "algorithms",
       "sourceQuery": "repo:TheAlgorithms/C-Plus-Plus",
-      "fetchedAt": "2026-11-14T06:28:34.815Z",
+      "fetchedAt": "2026-11-15T10:53:18.991Z",
       "provenance": "github",
       "stale": false,
-      "score": 91.69,
+      "score": 91.66,
       "reason": "Algorithms in C++ resource; 34886 GitHub stars."
     },
     {
@@ -444,17 +444,17 @@
         "programming-contests",
         "translation"
       ],
-      "stars": 11514,
+      "stars": 11516,
       "forks": 2193,
       "pushedAt": "2026-11-11T13:15:36.000Z",
       "license": "CC-BY-SA-4.0",
       "category": "algorithms",
       "sourceQuery": "repo:cp-algorithms/cp-algorithms",
-      "fetchedAt": "2026-11-14T06:28:37.159Z",
+      "fetchedAt": "2026-11-15T10:53:21.325Z",
       "provenance": "github",
       "stale": false,
-      "score": 90.23,
-      "reason": "Algorithms in C++ resource; 11514 GitHub stars."
+      "score": 90.2,
+      "reason": "Algorithms in C++ resource; 11516 GitHub stars."
     },
     {
       "id": 200492112,
@@ -479,11 +479,11 @@
       ],
       "stars": 6419,
       "forks": 1198,
-      "pushedAt": "2026-11-13T16:49:35.000Z",
+      "pushedAt": "2026-11-14T16:49:27.000Z",
       "license": "MIT",
       "category": "algorithms",
       "sourceQuery": "topic:algorithms language:C++",
-      "fetchedAt": "2026-11-14T06:28:32.493Z",
+      "fetchedAt": "2026-11-15T10:53:16.614Z",
       "provenance": "github",
       "stale": false,
       "score": 89.02,
@@ -513,17 +513,17 @@
         "triangulation",
         "voronoi-diagram"
       ],
-      "stars": 6125,
-      "forks": 1626,
-      "pushedAt": "2026-11-13T11:09:00.000Z",
+      "stars": 6126,
+      "forks": 1625,
+      "pushedAt": "2026-11-14T18:19:31.000Z",
       "license": null,
       "category": "algorithms",
       "sourceQuery": "topic:algorithms language:C++",
-      "fetchedAt": "2026-11-14T06:28:32.493Z",
+      "fetchedAt": "2026-11-15T10:53:16.614Z",
       "provenance": "github",
       "stale": false,
-      "score": 88.91,
-      "reason": "Algorithms in C++ resource; 6125 GitHub stars."
+      "score": 88.92,
+      "reason": "Algorithms in C++ resource; 6126 GitHub stars."
     },
     {
       "id": 152631182,
@@ -547,15 +547,15 @@
         "python"
       ],
       "stars": 6085,
-      "forks": 1828,
+      "forks": 1829,
       "pushedAt": "2026-11-08T14:56:25.000Z",
       "license": "MIT",
       "category": "algorithms",
       "sourceQuery": "topic:algorithms language:C++",
-      "fetchedAt": "2026-11-14T06:28:32.493Z",
+      "fetchedAt": "2026-11-15T10:53:16.614Z",
       "provenance": "github",
       "stale": false,
-      "score": 88.77,
+      "score": 88.74,
       "reason": "Algorithms in C++ resource; 6085 GitHub stars."
     },
     {
@@ -572,17 +572,17 @@
         "interview-ds-algo",
         "leetcode"
       ],
-      "stars": 5306,
-      "forks": 2162,
-      "pushedAt": "2026-11-14T05:52:39.000Z",
+      "stars": 5312,
+      "forks": 2163,
+      "pushedAt": "2026-11-14T17:28:12.000Z",
       "license": null,
       "category": "algorithms",
       "sourceQuery": "topic:algorithms language:C++",
-      "fetchedAt": "2026-11-14T06:28:32.493Z",
+      "fetchedAt": "2026-11-15T10:53:16.614Z",
       "provenance": "github",
       "stale": false,
-      "score": 88.62,
-      "reason": "Algorithms in C++ resource; 5306 GitHub stars."
+      "score": 88.61,
+      "reason": "Algorithms in C++ resource; 5312 GitHub stars."
     },
     {
       "id": 25298630,
@@ -605,14 +605,14 @@
       ],
       "stars": 3169,
       "forks": 560,
-      "pushedAt": "2026-11-13T13:45:25.000Z",
+      "pushedAt": "2026-11-15T09:38:58.000Z",
       "license": "MIT",
       "category": "algorithms",
       "sourceQuery": "topic:algorithms language:C++",
-      "fetchedAt": "2026-11-14T06:28:32.493Z",
+      "fetchedAt": "2026-11-15T10:53:16.614Z",
       "provenance": "github",
       "stale": false,
-      "score": 87.49,
+      "score": 87.5,
       "reason": "Algorithms in C++ resource; 3169 GitHub stars."
     },
     {
@@ -631,17 +631,17 @@
         "python",
         "scientific-computing"
       ],
-      "stars": 3971,
+      "stars": 3972,
       "forks": 576,
       "pushedAt": "2026-10-02T15:11:31.000Z",
       "license": "MIT",
       "category": "algorithms",
       "sourceQuery": "topic:algorithms language:C++",
-      "fetchedAt": "2026-11-14T06:28:32.493Z",
+      "fetchedAt": "2026-11-15T10:53:16.614Z",
       "provenance": "github",
       "stale": false,
-      "score": 86.95,
-      "reason": "Algorithms in C++ resource; 3971 GitHub stars."
+      "score": 86.92,
+      "reason": "Algorithms in C++ resource; 3972 GitHub stars."
     },
     {
       "id": 46746797,
@@ -668,10 +668,10 @@
       "license": "BSL-1.0",
       "category": "algorithms",
       "sourceQuery": "topic:algorithms language:C++",
-      "fetchedAt": "2026-11-14T06:28:32.493Z",
+      "fetchedAt": "2026-11-15T10:53:16.614Z",
       "provenance": "github",
       "stale": false,
-      "score": 86.36,
+      "score": 86.33,
       "reason": "Algorithms in C++ resource; 2299 GitHub stars."
     },
     {
@@ -690,10 +690,10 @@
       "license": null,
       "category": "algorithms",
       "sourceQuery": "topic:algorithms language:C++",
-      "fetchedAt": "2026-11-14T06:28:32.493Z",
+      "fetchedAt": "2026-11-15T10:53:16.614Z",
       "provenance": "github",
       "stale": false,
-      "score": 86.02,
+      "score": 86.01,
       "reason": "Algorithms in C++ resource; 6198 GitHub stars."
     },
     {
@@ -728,10 +728,10 @@
       "license": "MIT",
       "category": "algorithms",
       "sourceQuery": "topic:algorithms language:C++",
-      "fetchedAt": "2026-11-14T06:28:32.493Z",
+      "fetchedAt": "2026-11-15T10:53:16.614Z",
       "provenance": "github",
       "stale": false,
-      "score": 85.73,
+      "score": 85.7,
       "reason": "Algorithms in C++ resource; 1557 GitHub stars."
     },
     {
@@ -766,10 +766,10 @@
       "license": "Apache-2.0",
       "category": "algorithms",
       "sourceQuery": "topic:algorithms language:C++",
-      "fetchedAt": "2026-11-14T06:28:32.493Z",
+      "fetchedAt": "2026-11-15T10:53:16.614Z",
       "provenance": "github",
       "stale": false,
-      "score": 84.86,
+      "score": 84.83,
       "reason": "Algorithms in C++ resource; 1109 GitHub stars."
     }
   ]
