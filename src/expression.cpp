@@ -7,7 +7,16 @@ namespace axiom::math {
 ExpressionError::ExpressionError(std::string message, const std::size_t position)
     : std::runtime_error(std::move(message)), position_(position) {}
 
+ExpressionError::~ExpressionError() = default;
+
 std::size_t ExpressionError::position() const noexcept { return position_; }
+
+OperandError::OperandError(std::string message, const std::size_t position, const Operand operand)
+    : ExpressionError(std::move(message), position), operand_(operand) {}
+
+OperandError::~OperandError() = default;
+
+OperandError::Operand OperandError::operand() const noexcept { return operand_; }
 
 namespace {
 
@@ -40,7 +49,7 @@ public:
         if (position_ != input_.size()) {
             fail("Unexpected input after the expression.", position_);
         }
-        return {result.rational, std::move(steps_)};
+        return {result.rational, std::move(steps_), omitted_steps_};
     }
 
 private:
@@ -84,9 +93,18 @@ private:
 
     void record(const Value& value) {
         if (collect_steps_) {
-            steps_.push_back({std::string(input_.substr(value.begin,
-                                                       value.end - value.begin)),
-                              value.rational});
+            // A slice includes the slices of the operations inside it, so a long
+            // chain repeats its earlier text in every step. Record the first
+            // steps that fit the limit, and only count every operation after them.
+            const auto length = value.end - value.begin;
+            if (omitted_steps_ != 0 ||
+                length > max_explanation_length - explanation_length_) {
+                ++omitted_steps_;
+            } else {
+                explanation_length_ += length;
+                steps_.push_back({std::string(input_.substr(value.begin, length)),
+                                  value.rational});
+            }
         }
     }
 
@@ -222,8 +240,19 @@ private:
     bool collect_steps_;
     std::size_t position_ = 0;
     std::size_t tokens_ = 0;
+    std::size_t explanation_length_ = 0;
+    std::size_t omitted_steps_ = 0;
     std::vector<Step> steps_;
 };
+
+// Evaluates one operand of equivalent() and names it in any expression error.
+Rational operand_value(const std::string_view text, const OperandError::Operand operand) {
+    try {
+        return evaluate(text).value;
+    } catch (const ExpressionError& error) {
+        throw OperandError(error.what(), error.position(), operand);
+    }
+}
 
 }  // namespace
 
@@ -232,7 +261,10 @@ Evaluation evaluate(const std::string_view expression, const bool collect_steps)
 }
 
 bool equivalent(const std::string_view left, const std::string_view right) {
-    return evaluate(left).value == evaluate(right).value;
+    // Evaluate left first, so that when both operands are invalid the error
+    // always names the left one.
+    const Rational left_value = operand_value(left, OperandError::Operand::left);
+    return left_value == operand_value(right, OperandError::Operand::right);
 }
 
 }  // namespace axiom::math

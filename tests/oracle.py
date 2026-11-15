@@ -21,36 +21,91 @@ def canonical(value: Fraction) -> str:
     return str(value.numerator) if value.denominator == 1 else str(value)
 
 
-def expression(rng: random.Random, depth: int) -> tuple[str, Fraction]:
-    if depth == 0 or rng.random() < 0.3:
+# How tightly printed text binds: a sum or difference, a product or quotient,
+# a signed operand, and a number or parenthesized group.
+SUM, PRODUCT, SIGNED, ATOM = range(4)
+LEVEL = {"+": SUM, "-": SUM, "*": PRODUCT, "/": PRODUCT}
+# Separators between tokens, including every ASCII whitespace byte the parser accepts.
+GAPS = ["", "", " ", " ", " ", "  ", "\t", "\n", "\r", "\f", "\v"]
+
+
+def gap(rng: random.Random) -> str:
+    return rng.choice(GAPS)
+
+
+def group(rng: random.Random, text: str) -> str:
+    return f"({gap(rng)}{text}{gap(rng)})"
+
+
+def expression(rng: random.Random, depth: int, leaf_chance: float = 0.25) -> tuple[str, Fraction, int]:
+    """Generate an expression tree and its exact value.
+
+    The text has only the parentheses that precedence and left associativity
+    require, plus some redundant ones, so the parser's grouping rules decide
+    its value. Also returns how tightly the text binds.
+    """
+    choice = rng.random()
+    if depth == 0 or choice < leaf_chance:
         number = rng.randint(-30, 30)
         if rng.random() < 0.4:
             magnitude = abs(number)
             text = f"{'-' if number < 0 else ''}{magnitude // 10}.{magnitude % 10}"
-            return text, Fraction(text)
-        return str(number), Fraction(number)
-    left_text, left = expression(rng, depth - 1)
-    right_text, right = expression(rng, depth - 1)
-    operation = rng.choice("+-*/")
-    if operation == "/" and right == 0:
-        operation = "+"
-    if operation == "+":
-        value = left + right
-    elif operation == "-":
-        value = left - right
-    elif operation == "*":
-        value = left * right
+        else:
+            text = str(number)
+        value = Fraction(text)
+        level = SIGNED if number < 0 else ATOM
+    elif choice < leaf_chance + 0.15:
+        operand_text, operand, operand_level = expression(rng, depth - 1)
+        sign = rng.choice("+-")
+        # A sign applies only to the operand that follows it.
+        if operand_level < SIGNED:
+            operand_text = group(rng, operand_text)
+        text = f"{sign}{gap(rng)}{operand_text}"
+        value = -operand if sign == "-" else operand
+        level = SIGNED
     else:
-        value = left / right
+        left_text, left, left_level = expression(rng, depth - 1)
+        right_text, right, right_level = expression(rng, depth - 1)
+        operation = rng.choice("+-*/")
+        if operation == "/" and right == 0:
+            operation = "+"
+        if operation == "+":
+            value = left + right
+        elif operation == "-":
+            value = left - right
+        elif operation == "*":
+            value = left * right
+        else:
+            value = left / right
+        level = LEVEL[operation]
+        # Operators of one level associate to the left, so a right operand at
+        # that level needs parentheses and a left operand does not.
+        if left_level < level:
+            left_text = group(rng, left_text)
+        if right_level <= level:
+            right_text = group(rng, right_text)
+        text = f"{left_text}{gap(rng)}{operation}{gap(rng)}{right_text}"
     # Keep every subtree representable in the documented int64 result range.
     # Python itself remains an arbitrary-precision arithmetic oracle.
     if abs(value.numerator) > 2**63 - 1 or value.denominator > 2**63 - 1:
-        return "1", Fraction(1)
-    return f"({left_text} {operation} {right_text})", value
+        return "1", Fraction(1), ATOM
+    if rng.random() < 0.1:
+        return group(rng, text), value, ATOM
+    return text, value, level
 
 
 def run(binary: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run([str(binary), *arguments], text=True, capture_output=True, timeout=5, check=False)
+
+
+def source_excerpt(text: str, position: int) -> list[str]:
+    """The CLI's excerpt of an invalid expression and its caret line: up to 90
+    bytes starting 45 bytes before the error, "..." where input is cut off, and
+    the caret under the byte at the error position."""
+    begin = max(position - 45, 0)
+    prefix = "..." if begin else ""
+    suffix = "..." if begin + 90 < len(text) else ""
+    return [prefix + text[begin:begin + 90] + suffix, " " * (len(prefix) + position - begin) + "^"]
 
 
 def cli_contracts(binary: Path) -> None:
@@ -72,6 +127,26 @@ def cli_contracts(binary: Path) -> None:
     )
     if result.returncode != 0 or result.stdout != expected_steps or result.stderr:
         raise SystemExit(f"Worked-calculation CLI contract failed: {result}")
+
+    # Every step quotes its whole subexpression, so the steps of a long chain
+    # repeat its text: 1.8 MB for 4,096 bytes padded with spaces, and 66,048
+    # bytes for a sum of 257 ones. explain prints the first steps, which quote
+    # at most 65,536 bytes, counts the others, and still prints the result.
+    for spaces, terms, shown in [(3073, 511, 21), (0, 256, 255)]:
+        chain = "1" + " " * spaces + "+1" * terms
+        expected_output = "".join(
+            f"{index}. {chain[:1 + spaces + 2 * index]} = {index + 1}\n" for index in range(1, shown + 1)
+        ) + (
+            f"Omitted steps: {terms - shown} (the steps of one explanation quote at most 65536 bytes)\n"
+            f"Result: {terms + 1}\n"
+        )
+        result = run(binary, "explain", chain)
+        if result.returncode != 0 or result.stdout != expected_output or result.stderr:
+            raise SystemExit(f"Explanation-limit CLI contract failed for {terms} sums: exit={result.returncode}, "
+                             f"stdout={len(result.stdout)} bytes ending {result.stdout[-120:]!r}, stderr={result.stderr[:200]!r}")
+        result = run(binary, "eval", chain)
+        if result.returncode != 0 or result.stdout != f"{terms + 1}\n" or result.stderr:
+            raise SystemExit(f"Untraced evaluation of the long chain failed: {result}")
 
     for flag in ("--help", "-h"):
         result = run(binary, flag)
@@ -100,6 +175,25 @@ def cli_contracts(binary: Path) -> None:
     if len(lines) != 3 or not lines[0].startswith("error in expression at byte 1:") or lines[1:] != ["1/0", " ^"]:
         raise SystemExit(f"Division-by-zero source location is incorrect: {result}")
 
+    # In longer input the excerpt is bounded and marked where it is cut off,
+    # and the caret still points at the byte where the error is.
+    total = "(" + "+".join(str(number) for number in range(1, 21)) + ")"
+    for text, position, message in [
+        (f"{total} / (5-5)", 53, "division by zero"),
+        ("1 + " * 30 + "1/0" + " + 1" * 30, 121, "division by zero"),
+        ("@" + " " * 4000 + "1", 0, "Expected a number or '('."),
+        ("1" + " + 1" * 30 + " +", 123, "Expected a number or '('."),
+        (" " * 4096 + "@" + " " * 903, 4096, "Expression exceeds the 4096-byte limit."),
+    ]:
+        result = run(binary, "eval", text)
+        lines = result.stderr.splitlines()
+        expected = [f"error in expression at byte {position}: {message}", *source_excerpt(text, position)]
+        caret = lines[2].find("^") if len(lines) == 3 else -1
+        pointed = position == len(text) or (0 <= caret < len(lines[1]) and lines[1][caret] == text[position])
+        if result.returncode != 2 or result.stdout or lines != expected or not pointed:
+            raise SystemExit(f"Long-input source excerpt is incorrect for a {len(text)}-byte input: "
+                             f"exit={result.returncode}, stderr={result.stderr[:400]!r}")
+
     for left, right, label in [("1", "2/0", "right"), ("2/0", "1", "left")]:
         result = run(binary, "check", left, right)
         lines = result.stderr.splitlines()
@@ -112,6 +206,26 @@ def cli_contracts(binary: Path) -> None:
         result = run(binary, "eval", f"1+{control}[31m2")
         if result.returncode != 2 or result.stdout or control in result.stderr or any(ord(character) < 32 and character != "\n" for character in result.stderr):
             raise SystemExit(f"Unsafe control byte in error output: {result}")
+    # Each byte outside printable ASCII, such as the C1 control CSI (0x9b) raw
+    # or UTF-8 encoded, becomes one space, so the caret stays aligned.
+    for text, excerpt in [
+        (b"1+\x9b2J", b"1+ 2J"),
+        (b"1+\xc2\x9b31m2\xc2\x9d0;x\xc2\x9c", b"1+  31m2  0;x  "),
+        (b"1+\xc3\xa9", b"1+  "),
+    ]:
+        raw = subprocess.run([str(binary), "eval", text], capture_output=True, timeout=5, check=False)
+        expected = [b"error in expression at byte 2: Expected a number or '('.", excerpt, b"  ^", b""]
+        if raw.returncode != 2 or raw.stdout or raw.stderr.split(b"\n") != expected:
+            raise SystemExit(f"Unsafe or misaligned non-ASCII error output for {text!r}: {raw}")
+    # Calculation steps quote the input, including any whitespace the parser
+    # accepts. Only spaces may reach the terminal.
+    for text, steps in [
+        ("7 *\r3 +\n1", "1. 7 * 3 = 21\n2. 7 * 3 + 1 = 22\nResult: 22\n"),
+        ("1\v+\f2\t*3", "1. 2 *3 = 6\n2. 1 + 2 *3 = 7\nResult: 7\n"),
+    ]:
+        result = run(binary, "explain", text)
+        if result.returncode != 0 or result.stdout != steps or result.stderr:
+            raise SystemExit(f"Unsafe whitespace in explanation steps for {text!r}: {result}")
 
     # A read-only descriptor deterministically rejects writes on both Linux
     # and macOS, including buffered failures that surface only on flush.
@@ -139,10 +253,12 @@ def main() -> None:
     binary = args.binary.resolve(strict=True)
     rng = random.Random(0x4158494F)
     for index in range(args.cases):
-        text, expected = expression(rng, 4)
+        # The whole expression is an operation, not a single literal.
+        text, expected, _ = expression(rng, 4, leaf_chance=0)
+        text = f"{gap(rng)}{text}{gap(rng)}"
         result = run(binary, "eval", text)
         if result.returncode != 0 or result.stdout.strip() != canonical(expected):
-            raise SystemExit(f"Case {index} failed: {text}\nExpected {canonical(expected)}; got {result.stdout!r}; stderr={result.stderr!r}; exit={result.returncode}")
+            raise SystemExit(f"Case {index} failed: {text!r}\nExpected {canonical(expected)}; got {result.stdout!r}; stderr={result.stderr!r}; exit={result.returncode}")
     cli_contracts(binary)
     print(f"PASS {args.cases} seeded expressions against Python Fraction; CLI commands, explanations, error positions and terminal-output contracts")
 

@@ -24,6 +24,9 @@ jobs:
             type: Release
             sanitizers: OFF
             shared: OFF
+            # Global flags also reach the configure-time __int128 check, which
+            # GCC must still pass with pedantic diagnostics as errors.
+            configure_args: -DCMAKE_CXX_FLAGS=-pedantic-errors
           - os: ubuntu-latest
             compiler: clang++
             type: Debug
@@ -42,6 +45,9 @@ jobs:
             install_bindir: tools/bin
             install_libdir: lib64
             install_includedir: headers
+            # find_package does not search lib64 on Debian-family Linux, so the
+            # CMake package goes in share here, wherever the data directory is.
+            configure_args: -DCMAKE_INSTALL_DATAROOTDIR=tools/share
           - os: macos-latest
             compiler: clang++
             type: Release
@@ -68,6 +74,7 @@ jobs:
           -DCMAKE_INSTALL_BINDIR=${{ matrix.install_bindir || 'bin' }}
           -DCMAKE_INSTALL_LIBDIR=${{ matrix.install_libdir || 'lib' }}
           -DCMAKE_INSTALL_INCLUDEDIR=${{ matrix.install_includedir || 'include' }}
+          ${{ matrix.configure_args }}
       - name: Build
         run: cmake --build build --parallel 2
       - name: Test

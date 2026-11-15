@@ -1,6 +1,6 @@
 # Verification — 0.1.0
 
-Checked on 1 November 2026 (IST), using Apple Clang 21 on macOS arm64, CMake 4.4.5 and Python 3.9.6.
+Checked on 15 November 2026 (IST), using Apple Clang 21 on macOS arm64, CMake 4.4.5 and Python 3.9.6.
 
 ## Local results
 
@@ -9,10 +9,11 @@ Checked on 1 November 2026 (IST), using Apple Clang 21 on macOS arm64, CMake 4.4
 | Release build, strict warnings treated as errors | Passed |
 | Debug build with AddressSanitizer and UndefinedBehaviorSanitizer | Passed |
 | Shared-library Release build, strict warnings treated as errors | Passed |
-| CTest: core, library example, CLI help, installed consumer, two Python oracles | All six passed in static Release, sanitizer and shared Release builds |
-| C++ assertions | Seven groups, 33,198 assertions passed |
+| CTest: core, library example, CLI help, installed consumer, embedded consumer, three Python oracles | All eight passed in static Release, sanitizer and shared Release builds |
+| C++ assertions | Eight groups, 33,428 assertions passed |
 | Differential expression tests | 300 generated expressions matched Python `fractions.Fraction` |
 | Full-width arithmetic oracle | 512 cases: 196 exact results, 311 expected overflows, five division-by-zero rejections |
+| Integer-power oracle | 257 rational cases and the invalid-exponent checks passed against Python `fractions.Fraction` |
 | CLI contracts | Exact output/exit checks passed for equality, inequality, explanations, help/version, bad arguments, source pointers, control-byte handling and seven output-failure cases |
 | Relocated installation | Installed CLI and external CMake consumer ran after moving the prefix, in static, shared and sanitizer builds |
 | Custom installation directories | Shared CLI and consumer passed using `tools/bin`, `lib64` and `headers` |
@@ -51,7 +52,8 @@ ctest --test-dir build-shared --output-on-failure
 
 The [CI workflow](../.github/workflows/ci.yml) defines six jobs: GCC/Linux with no
 build type (keeps the configuration-less installed-consumer test covered), GCC/Linux
-Release, Clang/Linux sanitizer, Apple Clang/macOS Release, and shared-library Release
+Release (with a global `-pedantic-errors`, which also reaches the `__int128` configure
+check), Clang/Linux sanitizer, Apple Clang/macOS Release, and shared-library Release
 builds on both Linux and macOS. The shared jobs also use custom install directories.
 Consult the repository's Actions runs for the result associated with a particular
 commit; the local record above does not claim a Linux run.

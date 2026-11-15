@@ -1,3 +1,7 @@
 @PACKAGE_INIT@
 include("${CMAKE_CURRENT_LIST_DIR}/AxiomMathTargets.cmake")
+# The CLI is optional: import it only if it was installed alongside the library.
+if(EXISTS "@PACKAGE_AXIOM_MATH_INSTALLED_CLI@" AND EXISTS "${CMAKE_CURRENT_LIST_DIR}/AxiomMathCliTargets.cmake")
+    include("${CMAKE_CURRENT_LIST_DIR}/AxiomMathCliTargets.cmake")
+endif()
 check_required_components(AxiomMath)
