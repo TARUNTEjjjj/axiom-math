@@ -162,6 +162,7 @@ integer comparisons:
 
 `|an*ed - en*ad|` is below 2^127, the same bound the subtraction operator uses,
 so it is computed in 128 bits. Each side is then a product of that value, or of
-two 63-bit factors, with one more factor below 2^64, and so lies below 2^191.
+two factors of at most 2^63, with one more factor below 2^63, and so lies below
+2^190.
 The implementation multiplies a 128-bit value by a 64-bit value into three
 64-bit limbs and compares the limbs, so no intermediate is truncated.

@@ -126,7 +126,7 @@ def generated(rng: random.Random, count: int) -> list[tuple[Fraction, Fraction, 
             # An answer exactly on a bound, or one step either side of it.
             expected = random_fraction(rng)
             absolute = Fraction(rng.randint(0, 50), rng.choice([1, 10, 100, 1000, 3]))
-            relative = Fraction(rng.randint(0, 99), rng.choice([100, 1000, 7]))
+            relative = Fraction(rng.randint(0, 99), rng.choice([100, 1000, 128]))
             use_relative = kind == 2 and expected != 0
             bound = relative * abs(expected) if use_relative else absolute
             if use_relative:
@@ -204,7 +204,9 @@ def main() -> None:
     for values in [(Fraction(5), Fraction(5), Fraction(-1, MAXIMUM), Fraction(0)),
                    (Fraction(5), Fraction(5), Fraction(0), Fraction(MAXIMUM, MAXIMUM - 1)),
                    (Fraction(0), Fraction(0), Fraction(0), Fraction(-1, MAXIMUM)),
-                   (Fraction(0), Fraction(0), Fraction(MINIMUM), Fraction(0))]:
+                   (Fraction(0), Fraction(0), Fraction(MINIMUM), Fraction(0)),
+                   (Fraction(1), Fraction(1), Fraction(0), Fraction(1)),
+                   (Fraction(1), Fraction(0), Fraction(1, 2), Fraction(99, 98))]:
         counts[expect_cli(binary, values)] += 1
     cli_contracts(binary)
     print(f"PASS {len(rows)} worked examples and {sum(counts.values())} generated cases against Python Fraction "

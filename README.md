@@ -45,6 +45,7 @@ There is no package download during the build. The default build creates the CLI
 | --- | --- |
 | `axiom-math eval "EXPR"` | Print the reduced exact result. |
 | `axiom-math check "LEFT" "RIGHT"` | Print `equivalent` or `not equivalent`. |
+| `axiom-math approx "EXPECTED" "ANSWER" ABSOLUTE RELATIVE` | Separate approximate check: print `within tolerance` or `outside tolerance` (see [answer checking](docs/answer-checking.md)). |
 | `axiom-math explain "EXPR"` | Print each unary/binary calculation in evaluation order and the final result. A very long explanation lists only its first calculations and counts the rest (see the limits below). |
 | `axiom-math --help` | Show usage and supported syntax. |
 
@@ -61,7 +62,7 @@ Result: 2
 
 The explanation traces arithmetic evaluation, including fraction construction. It is not a symbolic proof or an equation-solving tutor. Invalid input produces an error, a byte position and a source pointer on standard error.
 
-Exit codes are `0` for successful evaluation or equality, `1` for a valid unequal comparison, and `2` for invalid syntax, division by zero, overflow, incorrect command usage or an output-write failure. Commands flush their output before reporting success, so a failed redirected write is reported as an error. As is conventional for Unix tools, a write to a closed pipe instead ends the command with `SIGPIPE`, which shells report as status 141. Successful output goes to standard output so commands can be used in scripts.
+Exit codes are `0` for successful evaluation, equality or an answer within tolerance, `1` for a valid unequal comparison or an answer outside tolerance, and `2` for invalid syntax, an invalid tolerance, division by zero, overflow, incorrect command usage or an output-write failure. Commands flush their output before reporting success, so a failed redirected write is reported as an error. As is conventional for Unix tools, a write to a closed pipe instead ends the command with `SIGPIPE`, which shells report as status 141. Successful output goes to standard output so commands can be used in scripts.
 
 ## Use the C++ library
 
@@ -76,6 +77,30 @@ const auto result = axiom::math::evaluate("0.1 + 0.2");
 const bool same = result.value == Rational(3, 10); // true
 const bool equivalent = axiom::math::equivalent("2 / 4", ".5");
 ```
+
+### Approximate answer checking
+
+Exact comparison never accepts a close answer. A separate, opt-in API in
+`<axiom/math/tolerance.hpp>` does, under an [answer-checking policy](docs/answer-checking.md):
+
+```cpp
+#include <axiom/math/tolerance.hpp>
+
+using axiom::math::Tolerance;
+
+// Accept when |answer - expected| <= absolute or <= relative * |expected|.
+const bool close = axiom::math::approximately_equivalent("1/3", "0.333", Tolerance{Rational(1, 1000), 0}); // true
+const bool exact = axiom::math::equivalent("1/3", "0.333");                                                // false
+const bool edge = axiom::math::within_tolerance(Rational(1, 3), Rational(333, 1000),
+                                                Tolerance{0, Rational(1, 1000)});                         // true: boundary
+```
+
+Boundaries are inclusive and decided exactly, without floating point; the
+relative bound scales with the expected value only; zero tolerances are exact
+equality. A negative tolerance, or a relative tolerance of 1 or more, throws
+`std::invalid_argument`. For representable values the comparison cannot
+overflow. The policy document lists worked acceptance and rejection examples,
+which an independent Python `fractions.Fraction` oracle checks.
 
 `Rational` converts implicitly only from integer types whose values all fit in `std::int64_t`, so `Rational(1, 3) + 1` is exact. A floating-point value, or an integer type such as `std::uint64_t` or `std::size_t`, would be truncated or wrapped, so passing one to the constructor, using it as an operand or passing it as the exponent of `pow` does not compile. Parse decimal text with `Rational::from_decimal("0.5")`, and range-check wider integers before casting them to `std::int64_t`.
 
@@ -122,8 +147,8 @@ Arithmetic is implemented with checked, reduced fractions and private 128-bit in
 
 The C++ suite exercises normalization, full-width integer boundaries, decimal parsing, operator precedence, error positions, input limits and worked steps. It also checks 3,000 deterministic rational pairs against independent small-integer calculations. Assertions remain active in Release builds.
 
-The optional Python suites compare 300 generated expressions and 512 cases near
-the full 64-bit boundaries against Python's `fractions.Fraction`. They check exact
+The optional Python suites compare 300 generated expressions, 512 cases near
+the full 64-bit boundaries and about 1,200 tolerance decisions against Python's `fractions.Fraction`. They check exact
 results, cancellation, overflow and division-by-zero rejection, plus CLI output
 and exit codes, including failed writes. Test input is synthetic; the project
 needs no accounts, personal records, network service or model API.
@@ -147,7 +172,7 @@ behavior; they do not establish correctness for every possible input. See
 
 AxiomMath is a separate C++ project related to the arithmetic needs of [Axiom SAT Math](https://axiom-sat.pages.dev/). It is not yet integrated into that JavaScript application and does not implement SAT scoring.
 
-Possible next work includes better teaching-oriented explanations, a separately specified answer-checking tolerance policy, and a WebAssembly experiment. These are future ideas. The current release focuses on exact arithmetic, reliable error handling and a reusable API.
+Possible next work includes better teaching-oriented explanations and a WebAssembly experiment. These are future ideas. The current release focuses on exact arithmetic, reliable error handling and a reusable API, with a separately specified [approximate answer-checking policy](docs/answer-checking.md) that leaves exact comparison unchanged.
 
 Contributions should follow [CONTRIBUTING.md](CONTRIBUTING.md). [MIT license](LICENSE), copyright Tarun Tej.
 

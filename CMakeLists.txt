@@ -57,7 +57,7 @@ function(axiom_configure target)
     endif()
 endfunction()
 
-add_library(axiom_math src/rational.cpp src/expression.cpp)
+add_library(axiom_math src/rational.cpp src/expression.cpp src/tolerance.cpp)
 add_library(AxiomMath::axiom_math ALIAS axiom_math)
 target_include_directories(axiom_math PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -189,7 +189,8 @@ if(AXIOM_MATH_BUILD_TESTS AND BUILD_TESTING)
         add_test(NAME fraction-oracle COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle.py $<TARGET_FILE:axiom-math>)
         add_test(NAME wide-fraction-oracle COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/wide_oracle.py $<TARGET_FILE:axiom-math>)
         add_test(NAME integer-power-oracle COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/power_oracle.py $<TARGET_FILE:axiom-math>)
-        set_tests_properties(integer-power-oracle PROPERTIES TIMEOUT 120)
+        add_test(NAME tolerance-oracle COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/tolerance_oracle.py $<TARGET_FILE:axiom-math>)
+        set_tests_properties(integer-power-oracle tolerance-oracle PROPERTIES TIMEOUT 120)
         set_tests_properties(fraction-oracle wide-fraction-oracle PROPERTIES TIMEOUT 120)
     else()
         message(STATUS "Python 3 unavailable: optional Fraction differential tests will not run.")

@@ -1,4 +1,5 @@
 #include "axiom/math/expression.hpp"
+#include "axiom/math/tolerance.hpp"
 
 #include <algorithm>
 #include <charconv>
@@ -14,13 +15,17 @@ void usage(std::ostream& out) {
         << "Usage:\n"
         << "  axiom-math eval EXPR          Print a reduced exact result\n"
         << "  axiom-math check LEFT RIGHT   Check exact arithmetic equivalence\n"
+        << "  axiom-math approx EXPECTED ANSWER ABSOLUTE RELATIVE\n"
+        << "                                Accept ANSWER if |ANSWER - EXPECTED| <= ABSOLUTE\n"
+        << "                                or <= RELATIVE * |EXPECTED| (exact, inclusive)\n"
         << "  axiom-math explain EXPR       Show calculations in evaluation order\n"
         << "  axiom-math pow EXPR EXPONENT  Raise an exact result to an integer power\n"
         << "  axiom-math --help\n"
         << "  axiom-math --version\n\n"
         << "Quote expressions containing spaces or shell operators.\n"
         << "Supported: integers, finite decimals, + - * /, unary signs, parentheses.\n"
-        << "Exit codes: 0 success/equivalent; 1 not equivalent; 2 invalid input or output error.\n";
+        << "Exit codes: 0 success/equivalent/within tolerance; 1 not equivalent/outside tolerance;\n"
+        << "2 invalid input, invalid tolerance or output error.\n";
 }
 
 int finish_output(int status = 0) {
@@ -80,8 +85,9 @@ int main(int argc, char* argv[]) {
     }
     const std::string_view command(argv[1]);
     const bool single = command == "eval" || command == "explain";
-    if ((!single && command != "check" && command != "pow") || (single && argc != 3) ||
-        ((command == "check" || command == "pow") && argc != 4)) {
+    const bool approx = command == "approx";
+    if ((!single && !approx && command != "check" && command != "pow") || (single && argc != 3) ||
+        ((command == "check" || command == "pow") && argc != 4) || (approx && argc != 6)) {
         usage(std::cerr);
         return 2;
     }
@@ -100,6 +106,17 @@ int main(int argc, char* argv[]) {
             const auto base = run(argv[2], false, "base expression");
             std::cout << base.value.pow(exponent).str() << '\n';
             return finish_output();
+        }
+        if (approx) {
+            // Evaluate every argument, so each error names its own argument,
+            // then validate the tolerance (std::invalid_argument, status 2).
+            const auto expected = run(argv[2], false, "expected value");
+            const auto answer = run(argv[3], false, "answer");
+            const axiom::math::Tolerance tolerance{run(argv[4], false, "absolute tolerance").value,
+                                                   run(argv[5], false, "relative tolerance").value};
+            const bool accepted = axiom::math::within_tolerance(expected.value, answer.value, tolerance);
+            std::cout << (accepted ? "within tolerance" : "outside tolerance") << '\n';
+            return finish_output(accepted ? 0 : 1);
         }
         if (command == "check") {
             const auto left = run(argv[2], false, "left expression");

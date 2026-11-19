@@ -8,12 +8,16 @@ flowchart LR
   Consumer[C++ library consumer] --> Parser
   Consumer --> Rational[Canonical rational arithmetic]
   Parser --> Rational
+  CLI --> Tolerance[Approximate answer checking]
+  Consumer --> Tolerance
+  Tolerance --> Parser
+  Tolerance --> Rational
   Parser --> Trace[Optional calculation steps]
   Tests[Independent tests] --> Parser
   Tests --> Rational
 ```
 
-The public headers expose standard C++20 types. `rational.cpp` owns numeric normalization and range checks. `expression.cpp` owns grammar, precedence, resource bounds and error positions. `app/main.cpp` handles command arguments, terminal-safe diagnostics and exit codes. The library does not print or access files.
+The public headers expose standard C++20 types. `rational.cpp` owns numeric normalization and range checks. `expression.cpp` owns grammar, precedence, resource bounds and error positions. `tolerance.cpp` owns the separate approximate answer-checking policy ([specification](answer-checking.md)) and its exact 192-bit comparison. `app/main.cpp` handles command arguments, terminal-safe diagnostics and exit codes. The library does not print or access files.
 
 ## Canonical representation
 
@@ -27,7 +31,7 @@ For valid stored inputs, each numerator magnitude is at most 2^63 and each denom
 
 Subtraction is implemented directly, not by first negating the right operand: `INT64_MIN - INT64_MIN` is representable even though `-INT64_MIN` is not representable as a Rational.
 
-The cost of bounded exact arithmetic is explicit overflow. This library does not provide arbitrary precision, symbolic simplification across overflowing subexpressions, floating-point estimates or tolerance-based equality.
+The cost of bounded exact arithmetic is explicit overflow. This library does not provide arbitrary precision, symbolic simplification across overflowing subexpressions or floating-point estimates. Equality is exact; tolerance-based acceptance is a separate API (`within_tolerance`, `approximately_equivalent`) that does not change `==` or `equivalent()`.
 
 ## Parsing and diagnostics
 
@@ -65,6 +69,16 @@ the divisor is zero. CLI checks also pass a read-only stdout descriptor to every
 output-producing command to ensure write failures return status 2. For a write
 to a closed pipe, the CLI keeps the conventional Unix `SIGPIPE` termination
 instead (status 141 in a shell).
+
+A fourth Python oracle restates the [answer-checking policy](answer-checking.md)
+with `fractions.Fraction`. It recomputes every published worked example (with no
+build it checks only the document), then compares the `approx` command on those
+examples and about 1,200 seeded cases: unrelated values, answers exactly on an
+absolute or relative bound or one step of 10^-6 to 1/(2^63 - 1) either side, and
+full-width operands whose distance is not representable. The C++ suite checks
+the same policy against plain small-integer cross-multiplication and Rational
+arithmetic, and checks that negating both values and zero tolerances behave as
+specified.
 
 Sanitizer builds use AddressSanitizer and UndefinedBehaviorSanitizer. CI also tests a separate compiler family so compiler-specific behavior is less likely to go unnoticed. Python is a test tool only; the library and CLI have no Python runtime dependency.
 
@@ -128,5 +142,5 @@ none of AxiomMath's symbols.
 - Supported toolchains need C++20 and 128-bit integer intermediates. The build checks that extension explicitly; native MSVC is outside the current support scope.
 - The expression API uses bytes and ASCII syntax, not Unicode mathematical notation.
 - The CLI evaluates numeric expressions; it does not solve equations containing unknowns.
-- Exact equality rejects close approximations. A future tolerance policy would need a separate API and tests, rather than changing exact equality silently.
+- Exact equality rejects close approximations. Approximate answer checking is a separate API with its own [specification](answer-checking.md) and tests; it never changes exact equality. Its relative bound is a fraction of the expected value below 1; there is no significant-figure or rounding-based rule.
 - No network calls, user accounts, persistence, analytics or model-training facilities are part of this project.

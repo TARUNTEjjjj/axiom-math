@@ -30,6 +30,20 @@ layout. Regression tests cover each observed failure. The new full-width oracle
 checks reduced results with Python's arbitrary-precision arithmetic and confirms
 overflow/domain errors; it does not reuse the C++ arithmetic implementation.
 
+## Approximate answer checking
+
+Checked on 19 November 2026 (IST) with the same toolchain, after the
+[answer-checking policy](answer-checking.md) was added. The worked examples were
+written and checked with Python `fractions.Fraction` (`python3
+tests/tolerance_oracle.py` with no binary) before the C++ implementation existed.
+
+| Check | Result |
+| --- | --- |
+| CTest, now nine tests including the tolerance oracle | All nine passed in static Release, no-build-type, `-pedantic-errors` Release, sanitizer and shared Release (`tools/bin`, `lib64`, `headers`) builds |
+| C++ assertions | Nine groups, 50,921 assertions passed, including 4,000 seeded tolerance cases against small-integer cross-multiplication |
+| Tolerance oracle | 29 published worked examples and 1,206 generated cases (555 accepted, 645 rejected, 6 invalid tolerances) matched Python `fractions.Fraction`, plus `approx` error, usage and failed-output contracts |
+| Mutation spot checks | Making the boundary exclusive, or ignoring the top 64 bits of the 192-bit comparison, made the tolerance oracle fail |
+
 ## Reproduce
 
 ```sh
