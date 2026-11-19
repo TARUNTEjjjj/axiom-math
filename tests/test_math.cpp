@@ -1,7 +1,9 @@
 #include "axiom/math/expression.hpp"
 #include "axiom/math/rational.hpp"
+#include "axiom/math/tolerance.hpp"
 
 #include <compare>
+#include <cstdlib>
 #include <cstdint>
 #include <functional>
 #include <iostream>
@@ -11,6 +13,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -19,6 +22,9 @@ namespace {
 using axiom::math::ExpressionError;
 using axiom::math::OperandError;
 using axiom::math::Rational;
+using axiom::math::Tolerance;
+using axiom::math::approximately_equivalent;
+using axiom::math::within_tolerance;
 using axiom::math::equivalent;
 using axiom::math::evaluate;
 
@@ -307,6 +313,99 @@ std::pair<OperandError::Operand, std::size_t> operand_error(std::string_view lef
     throw std::runtime_error("equivalent() accepted " + std::string(left) + " and " + std::string(right));
 }
 
+Rational parse(std::string_view text) { return evaluate(text).value; }
+
+bool approx(std::string_view expected, std::string_view answer, std::string_view absolute, std::string_view relative) {
+    return within_tolerance(parse(expected), parse(answer), Tolerance{parse(absolute), parse(relative)});
+}
+
+// docs/answer-checking.md specifies this policy; tests/tolerance_oracle.py
+// checks its worked examples against Python Fraction through the CLI.
+void tolerance_policy() {
+    // Exact comparison is unchanged.
+    require(!equivalent("1/3", "0.333") && !(parse("1/3") == parse("0.333")), "exact comparison still rejects 0.333");
+    require(!approx("1/3", "0.333", "0", "0"), "zero tolerances are exact equality");
+    require(approx("1/3", "0.333", "0.001", "0"), "1/3000 is within 0.001");
+    require(!approx("1/3", "0.333", "0.0003", "0"), "1/3000 exceeds 0.0003");
+    require(approx("1/3", "0.333", "0", "0.001"), "relative boundary is inclusive");
+    require(!approx("1/3", "0.333", "0", "0.000999"), "just below the relative boundary");
+    require(approx("1", "1.1", "0.1", "0") && approx("1", "0.9", "0.1", "0"), "absolute boundary is inclusive on both sides");
+    require(!approx("1", "1.100000000000000001", "0.1", "0"), "10^-18 beyond the absolute boundary");
+    require(approx("100", "99", "0", "0.01") && !approx("99", "100", "0", "0.01"), "relative bound scales with the expected value");
+    require(approx("-100", "-99", "0", "0.01") && !approx("-100", "99", "0", "0.01"), "negative expected values");
+    require(approx("2", "2.004", "0.001", "0.002") && !approx("2", "2.004", "0.001", "0"), "either bound accepts");
+    require(!approx("0", "0.000001", "0", "0.5") && approx("0", "0", "0", "0.5"), "relative bound at zero accepts only zero");
+    require(approx("0", "-0.000001", "0.000001", "0") && approx("0.0001", "-0.0001", "0.001", "0"), "absolute bound at and across zero");
+
+    constexpr auto maximum = std::numeric_limits<std::int64_t>::max();
+    constexpr auto minimum = std::numeric_limits<std::int64_t>::min();
+    // Distances and bounds that no Rational can hold are still decided exactly.
+    require(within_tolerance(Rational(1, maximum), Rational(1, maximum - 1), {Rational(1, maximum), 0}),
+            "unrepresentable distance within the bound");
+    // The distance 1/(maximum * (maximum - 1)) lies just above 1/maximum^2 and
+    // below 2/maximum^2, both relative bounds that no Rational can hold either.
+    require(!within_tolerance(Rational(1, maximum), Rational(1, maximum - 1), {0, Rational(1, maximum)}),
+            "unrepresentable distance just beyond an unrepresentable bound");
+    require(within_tolerance(Rational(1, maximum), Rational(1, maximum - 1), {0, Rational(2, maximum)}),
+            "unrepresentable distance within an unrepresentable bound");
+    require(!within_tolerance(maximum, minimum, {maximum, Rational(maximum - 1, maximum)}), "distance 2^64 - 1");
+    require(within_tolerance(minimum, minimum + 1, {0, Rational(1, maximum)}), "relative bound at the minimum");
+    require(!within_tolerance(minimum, maximum, {maximum, Rational(maximum - 1, maximum)}), "opposite extremes");
+    require(within_tolerance(Rational(minimum, maximum), Rational(minimum + 1, maximum), {Rational(1, maximum), 0}),
+            "full-width denominators on the absolute boundary");
+    require(within_tolerance(maximum, maximum, {}) && !within_tolerance(maximum, maximum - 1, {}), "exact at the maximum");
+
+    for (const auto& invalid : {Tolerance{-1, 0}, Tolerance{Rational(-1, maximum), 0}, Tolerance{0, Rational(-1, 2)},
+                                Tolerance{0, 1}, Tolerance{0, Rational(maximum, maximum - 1)}}) {
+        requires_throw<std::invalid_argument>([&] { (void)within_tolerance(1, 1, invalid); }, "invalid tolerance", "tolerance");
+        // The tolerance is checked before the operands are evaluated.
+        requires_throw<std::invalid_argument>([&] { (void)approximately_equivalent("1/0", "1", invalid); },
+                                              "invalid tolerance before operands", "tolerance");
+    }
+    require(within_tolerance(5, 4, {1, Rational(maximum - 1, maximum)}), "largest valid relative tolerance");
+
+    require(approximately_equivalent("1/3", "0.333", {Rational(1, 1000), 0}), "expression form");
+    require(!approximately_equivalent("1/3", "0.333", {}), "expression form with zero tolerance");
+    using Operand = OperandError::Operand;
+    for (const auto& [expected, answer, operand, position] :
+         {std::tuple{"1/0", "1", Operand::left, std::size_t{1}}, std::tuple{"1 +", "1/0", Operand::left, std::size_t{3}},
+          std::tuple{"1", "2 * (3", Operand::right, std::size_t{6}}}) {
+        try {
+            (void)approximately_equivalent(expected, answer, {Rational(1, 10), 0});
+            throw std::runtime_error("approximately_equivalent() accepted an invalid operand");
+        } catch (const OperandError& error) {
+            require(error.operand() == operand && error.position() == position, "approximately_equivalent() names the operand");
+        }
+    }
+
+    // Independent small-integer oracle: every product stays below 10^6, so plain
+    // int64 cross-multiplication decides each case without the 192-bit code.
+    std::mt19937 generator(0x544f4cU);
+    for (int index = 0; index < 4000; ++index) {
+        const std::int64_t en = draw(generator, -60, 60), ed = draw(generator, 1, 12);
+        std::int64_t an = draw(generator, -60, 60), ad = draw(generator, 1, 12);
+        if (index % 3 == 0) {  // Often land on or near a bound.
+            an = en * ad / ed + draw(generator, -2, 2);
+        }
+        const std::int64_t tn = draw(generator, 0, 30) * (index % 4 == 0 ? 0 : 1), td = draw(generator, 1, 12);
+        const std::int64_t rn = draw(generator, 0, 11), rd = 12;
+        const std::int64_t distance = std::abs(an * ed - en * ad);
+        const bool expected = distance * td <= tn * ad * ed || distance * rd <= rn * std::abs(en) * ad;
+        const Rational e(en, ed), a(an, ad);
+        const Tolerance tolerance{Rational(tn, td), Rational(rn, rd)};
+        const bool actual = within_tolerance(e, a, tolerance);
+        require(actual == expected, "small-integer tolerance oracle at case " + std::to_string(index));
+        // The same decision through Rational arithmetic, and the documented invariants.
+        const Rational gap = a > e ? a - e : e - a;
+        require(actual == (gap <= tolerance.absolute || gap <= tolerance.relative * (e < 0 ? -e : e)), "Rational arithmetic agrees");
+        require(actual == within_tolerance(-e, -a, tolerance), "negating both values keeps the decision");
+        require(within_tolerance(e, a, {}) == (e == a), "zero tolerances are exact equality");
+        if (within_tolerance(e, a, {0, tolerance.relative})) {
+            require(e == 0 ? a == 0 : (a != 0 && (a < 0) == (e < 0)), "relative bound keeps the expected sign");
+        }
+    }
+}
+
 void expression_failures() {
     // Each error points at the offending byte: unexpected input, the end of the
     // input, the failing operator, or the start (or sign) of a rejected literal.
@@ -500,7 +599,7 @@ int main() {
         {"integer boundaries and overflow", integer_boundaries}, {"exact decimal literals", decimal_literals},
         {"exact integer powers", integer_powers},
         {"expression precedence and equivalence", expression_values}, {"expression errors and resource limits", expression_failures},
-        {"worked calculation steps", explanations},
+        {"worked calculation steps", explanations}, {"approximate answer-checking policy", tolerance_policy},
     };
     std::size_t passed = 0;
     for (const auto& [name, function] : tests) {
